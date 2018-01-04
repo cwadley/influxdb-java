@@ -3,7 +3,9 @@ package org.influxdb;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -175,6 +177,34 @@ public class InfluxDBTest {
 		Point point1 = Point
 				.measurement("cpu")
 				.tag("atag", "test")
+				.addField("idle", 90L)
+				.addField("usertime", 9L)
+				.addField("system", 1L)
+				.build();
+		Point point2 = Point.measurement("disk").tag("atag", "test").addField("used", 80L).addField("free", 1L).build();
+		batchPoints.point(point1);
+		batchPoints.point(point2);
+		this.influxDB.write(batchPoints);
+		Query query = new Query("SELECT * FROM cpu GROUP BY *", dbName);
+		QueryResult result = this.influxDB.query(query);
+		Assertions.assertFalse(result.getResults().get(0).getSeries().get(0).getTags().isEmpty());
+		this.influxDB.deleteDatabase(dbName);
+	}
+
+	/**
+	* Test writing with batched tags
+	*/
+	@Test
+	public void testWriteBatchedTags() throws InterruptedException {
+		String dbName = "write_unittest_" + System.currentTimeMillis();
+		this.influxDB.createDatabase(dbName);
+		String rp = TestUtils.defaultRetentionPolicy(this.influxDB.version());
+		Map<String, String> tags = new HashMap<String, String>();
+		tags.put("async", "true");
+		tags.put("batchedTags", "true");
+		BatchPoints batchPoints = BatchPoints.database(dbName).tags(tags).retentionPolicy(rp).build();
+		Point point1 = Point
+				.measurement("cpu")
 				.addField("idle", 90L)
 				.addField("usertime", 9L)
 				.addField("system", 1L)

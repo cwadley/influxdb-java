@@ -84,6 +84,17 @@ public class BatchPoints {
     }
 
     /**
+     * Add a set of tags to this set of tags.
+     *
+     * @param tagsToAdd the list of tags to add
+     * @return the Builder instance
+     */
+    public Builder tags(final Map<String, String> tagsToAdd) {
+      this.tags.putAll(tagsToAdd);
+      return this;
+    }
+
+    /**
      * Add a Point to this set of points.
      *
      * @param pointToAdd the Point to add

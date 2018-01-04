@@ -1,6 +1,7 @@
 package org.influxdb.dto;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -98,5 +99,65 @@ public class BatchPointTest {
 
         // THEN equals returns true
         assertThat(equals).isEqualTo(false);
+    }
+
+    @Test
+    public void testTags() throws Exception {
+        // GIVEN that tags is called when building a BatchPoints object
+        Map<String, String> tags = new HashMap<String, String>();
+        tags.put("key1", "value1");
+        tags.put("key2", "value2");
+        tags.put("key3", "value3");
+
+        BatchPoints bp = BatchPoints
+            .database("myDB")
+            .tags(tags)
+            .build();
+
+        // WHEN I call the BatchPoints getTags method
+        Map<String, String> returnedTags = bp.getTags();
+
+        // THEN the map of tags returned equal my original map
+        assertThat(returnedTags).isEqualTo(tags);
+    }
+
+    @Test
+    public void testTagsAfterTag() throws Exception {
+        // GIVEN that tag and then tags are called when building a BatchPoints object
+        Map<String, String> tags = new HashMap<String, String>();
+        tags.put("key2", "value2");
+        tags.put("key3", "value3");
+
+        BatchPoints bp = BatchPoints
+            .database("myDB")
+            .tag("key1", "value1")
+            .tags(tags)
+            .build();
+
+        // WHEN I call the BatchPoints getTags method
+        Map<String, String> returnedTags = bp.getTags();
+
+        // THEN the map of tags returned contains only the tags passed to the object
+        assertThat(returnedTags).containsOnly(entry("key1", "value1"), entry("key2", "value2"), entry("key3", "value3"));
+    }
+
+    @Test
+    public void testTagAfterTags() throws Exception {
+        // GIVEN that tags and then tag are called when building a BatchPoints object
+        Map<String, String> tags = new HashMap<String, String>();
+        tags.put("key1", "value1");
+        tags.put("key2", "value2");
+
+        BatchPoints bp = BatchPoints
+            .database("myDB")
+            .tags(tags)
+            .tag("key3", "value3")
+            .build();
+
+        // WHEN I call the BatchPoints getTags method
+        Map<String, String> returnedTags = bp.getTags();
+
+        // THEN the map of tags returned contains only the tags passed to the object
+        assertThat(returnedTags).containsOnly(entry("key1", "value1"), entry("key2", "value2"), entry("key3", "value3"));
     }
 }
